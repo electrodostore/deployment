@@ -187,6 +187,57 @@ services:
       - carritos_db_data:/var/lib/mysql
 
 
+
+  venta-service:
+    build: ../venta-service
+    mem_limit: 512m
+    expose:
+      - "9191"
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      EUREKA_URL: ${EUREKA_URL}
+      DB_USERNAME: ${VENTAS_DB_USER}
+      DB_PASSWORD: ${VENTAS_DB_PASSWORD}
+      DB_URL: ${VENTAS_DB_URL}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9191/actuator/health"]
+      interval: 30s     
+      timeout: 10s    
+      retries: 5        
+      start_period: 60s
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      venta-db:
+        condition: service_healthy
+    networks:
+      - electrodostore-network
+
+
+
+  venta-db:
+    image: mysql:8.0.33 
+    mem_limit: 512m
+    environment:
+      MYSQL_ROOT_PASSWORD: ${VENTAS_DB_ROOT_PASSWORD}
+      MYSQL_USER: ${VENTAS_DB_USER}
+      MYSQL_PASSWORD: ${VENTAS_DB_PASSWORD}
+      MYSQL_DATABASE: ${VENTAS_DB_NAME}
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - electrodostore-network
+    volumes:
+      - ventas_db_data:/var/lib/mysql
+
+
 networks:
   electrodostore-network:
     driver: bridge
@@ -196,5 +247,6 @@ volumes:
   productos_db_data:
   clientes_db_data:
   carritos_db_data:
+  ventas_db_data:
   
 
