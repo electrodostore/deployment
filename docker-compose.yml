@@ -40,10 +40,61 @@ services:
       - electrodostore-network
 
 
-networks:
+  producto-service:
+    build: ../producto-service
+    mem_limit: 512m
+    expose:
+      - "8181"
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      EUREKA_URL: ${EUREKA_URL}
+      DB_USERNAME: ${PRODUCTOS_DB_USER}
+      DB_PASSWORD: ${PRODUCTOS_DB_PASSWORD}
+      DB_URL: ${PRODUCTOS_DB_URL}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8181/actuator/health"]
+      interval: 30s     
+      timeout: 10s    
+      retries: 5        
+      start_period: 60s
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      producto-db:
+        condition: service_healthy
+    networks:
+      - electrodostore-network
+
+
+  producto-db:
+    image: mysql:8.0.33 
+    mem_limit: 512m
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PRODUCTOS_DB_ROOT_PASSWORD}
+      MYSQL_USER: ${PRODUCTOS_DB_USER}
+      MYSQL_PASSWORD: ${PRODUCTOS_DB_PASSWORD}
+      MYSQL_DATABASE: ${PRODUCTOS_DB_NAME}
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - electrodostore-network
+    volumes:
+      - productos_db_data:/var/lib/mysql    
+
+
+  networks:
   electrodostore-network:
     driver: bridge
 
 
+volumes:
+  productos_db_data:
   
 
