@@ -1,0 +1,28 @@
+services:
+  config-server:
+    build: ../config-server
+    mem_limit: 512m
+    ports:
+      - "8888:8888"
+    environment:
+      GITHUB_URL: ${GITHUB_URL}
+      GITHUB_USERNAME: ${GITHUB_USERNAME}
+      GITHUB_TOCKEN: ${GITHUB_TOCKEN}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s     
+      timeout: 10s    
+      retries: 5        
+      start_period: 60s
+    networks:
+      - electrodostore-network
+
+
+  networks:
+  electrodostore-network:
+    driver: bridge
+
+
+
+
