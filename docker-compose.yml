@@ -19,10 +19,31 @@ services:
       - electrodostore-network
 
 
-  networks:
+  eureka-server:
+    build: ../eureka-server
+    mem_limit: 512m
+    ports:
+      - "8761:8761"
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s     
+      timeout: 10s    
+      retries: 5        
+      start_period: 60s
+    depends_on:
+      config-server:
+        condition: service_healthy    
+    networks:
+      - electrodostore-network
+
+
+networks:
   electrodostore-network:
     driver: bridge
 
 
-
+  
 
